@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMR and BMI Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f5f6f8;
+            --panel: rgba(255, 255, 255, 0.9);
+            --border: #e0e0e0;
+            --text: #1f1f1f;
+            --muted: #6a6a6a;
+            --accent: #1f5fff;
+            --accent-dark: #0b3db8;
+            --ribbon-under: #9bb7d4;
+            --ribbon-normal: #9dbf9e;
+            --ribbon-over: #c9b57a;
+            --ribbon-obese: #c88a7a;
+        }
+
+        body {
+            margin: 0;
+            padding: 2rem;
+            font-family: "IBM Plex Sans", Arial, sans-serif;
+            background-color: var(--bg);
+            background-image: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.03),
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 28px
+            );
+            color: var(--text);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        .app {
+            max-width: 75rem;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 5fr 7fr;
+            gap: 28px;
+        }
+
+        .panel {
+            background: var(--panel);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 1.75rem;
+            min-width: 0;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 18px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px 2px;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            background: transparent;
+            border-radius: 0;
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-bottom-color: var(--accent);
+        }
+
+        .input-suffix {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .input-suffix input {
+            flex: 1;
+            padding-right: 2px;
+        }
+
+        .suffix {
+            color: var(--muted);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .field {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            align-items: center;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .label-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            color: var(--muted);
+        }
+
+        .label-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .label-icon svg * {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .segmented {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border: 1px solid var(--border);
+        }
+
+        .segmented button {
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .segmented button + button {
+            border-left: 1px solid var(--border);
+        }
+
+        .segmented button.active {
+            background-color: var(--accent);
+            color: #fff;
+        }
+
+        .sex-group {
+            margin-top: 0;
+        }
+
+        .unit-row {
+            margin-top: 0;
+        }
+
+        .input-row {
+            display: grid;
+            gap: 10px;
+            margin-top: 0;
+        }
+
+        .input-row.two {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .input-row input {
+            margin-top: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .calculate-btn {
+            margin-top: 24px;
+            padding: 0.75rem 1.125rem;
+            width: 100%;
+            border-radius: 0;
+            border: none;
+            background-color: var(--accent);
+            color: #fff;
+            font-size: 0.875rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .calculate-btn:hover {
+            background-color: var(--accent-dark);
+            box-shadow: 0 6px 16px rgba(11, 61, 184, 0.2);
+        }
+        @media (max-width: 900px) {
+            .app {
+                    grid-template-columns: 1fr;
+                 }
+        }
+
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: repeat(12, 1fr);
+            }
+
+            .panel,
+            .dashboard {
+                grid-column: span 12;
+            }
+
+            .field {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .calculate-btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1.25rem;
+            }
+
+            .input-row.two {
+                grid-template-columns: 1fr;
+            }
+            .bmi-ribbon {
+                height: 36px;
+            }
+
+            .bmi-segment {
+                font-size: 9px;
+            }
+
+            .bmi-tick { 
+                font-size: 9px;
+                top: -14px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-row {
+                grid-template-columns: 90px 1fr 60px;
+                font-size: 12px;
+            }
+        }   
+        @media (max-width: 600px) {
+            .bmi-segment {
+                letter-spacing: 0.04em;
+            }
+        }
+        
+        .dashboard {
+            display: grid;
+            gap: 18px;
+            min-width: 0;
+        }
+
+        .block {
+            background-color: #fff; 
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 1.125rem;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .metric-number {
+            font-family: "IBM Plex Mono", "Courier New", monospace;
+        }
+
+        .ribbon-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .ribbon-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+        .ribbon-value {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .bmi-ribbon {
+            display: flex;
+            height: 44px;
+            position: relative;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .bmi-scale {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .bmi-tick {
+            position: absolute;
+            top: -18px;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.04em;
+        }
+
+        .bmi-tick::after {
+            content: "";
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            width: 1px;
+            height: 56px;
+            background: rgba(0, 0, 0, 0.35);
+            transform: translateX(-50%);
+        }
+
+        .bmi-segment {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            opacity: 0.4;
+        }
+
+        .bmi-segment.active {
+            opacity: 1;
+            font-weight: 600;
+        }
+
+        .bmi-segment.under {
+            background: var(--ribbon-under);
+        }
+
+        .bmi-segment.normal {
+            background: var(--ribbon-normal);
+        }
+
+        .bmi-segment.over {
+            background: var(--ribbon-over);
+        }
+
+        .bmi-segment.obese {
+            background: var(--ribbon-obese);
+        }
+
+        .bmi-marker {
+            position: absolute;
+            top: -6px;
+            bottom: -6px;
+            width: 2px;
+            background: #111;
+            left: 0;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .stat {
+            background-color: #f8f8fb;
+            border-radius: 0;
+            padding: 18px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .stat-title {
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .tooltip {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            cursor: pointer;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            top: 24px;
+            right: 0;
+            background-color: #222;
+            color: #fff;
+            padding: 8px;
+            font-size: 12px;
+            border-radius: 0;
+            width: 220px;
+        }
+
+        .insights {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .bmi-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 13px;
+            table-layout: fixed;
+            --active-row: rgba(31, 95, 255, 0.08);
+        }
+
+        .bmi-table th,
+        .bmi-table td {
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            word-break: break-word;
+        }
+
+        .bmi-table th {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+
+        .bmi-table tr.active {
+            background: var(--active-row);
+        }
+
+        .activity-chart {
+            display: grid;
+            gap: 10px;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 120px 1fr 70px;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .chart-bar {
+            height: 0.5rem;
+            background: #e6e7ec;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bar span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            background: var(--accent-dark);
+            transition: width 0.6s ease;
+        }
+
+        .chart-value {
+            text-align: right;
+            font-family: "IBM Plex Mono", "Courier New", monospace;
+        }
+    </style>
+
+    <script src="assignment 2.js" defer></script>
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="panel">
+        <h1>BMR Calculator</h1>
+        <h2>Your Details</h2>
+
+        <div class="field">
+            <label for="age">
+                <span class="label-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 7v6l4 2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+                    </svg>
+                </span>
+                Age
+            </label>
+            <div class="input-suffix">
+                <input type="number" id="age" min="10" max="120">
+                <span class="suffix">Years</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>
+                <span class="label-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="7" r="3"></circle>
+                        <path d="M5 20c1.5-4 12.5-4 14 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+                    </svg>
+                </span>
+                Sex
+            </label>
+            <div class="segmented sex-group">
+                <button type="button" id="maleBtn" onclick="setSex('male')">Male</button>
+                <button type="button" id="femaleBtn" onclick="setSex('female')">Female</button>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>
+                <span class="label-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+                    </svg>
+                </span>
+                Units
+            </label>
+            <div class="segmented unit-row">
+                <button type="button" id="unitMetricBtn" onclick="setUnits('metric')">Metric (cm/kg)</button>
+                <button type="button" id="unitImperialBtn" onclick="setUnits('imperial')">Imperial (ft/lb)</button>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>
+                <span class="label-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 3v18M6 3h6M6 9h4M6 15h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+                    </svg>
+                </span>
+                Height
+            </label>
+            <div>
+                <div class="input-row" id="heightMetric">
+                    <div class="input-suffix">
+                        <input type="number" id="heightCm">
+                        <span class="suffix">cm</span>
+                    </div>
+                </div>
+                <div class="input-row two hidden" id="heightImperial">
+                    <div class="input-suffix">
+                        <input type="number" id="heightFt">
+                        <span class="suffix">ft</span>
+                    </div>
+                    <div class="input-suffix">
+                        <input type="number" id="heightIn">
+                        <span class="suffix">in</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>
+                <span class="label-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 8h12l-1 12H7L6 8z" stroke="currentColor" stroke-width="2" fill="none"></path>
+                        <path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+                    </svg>
+                </span>
+                Weight
+            </label>
+            <div>
+                <div class="input-row" id="weightMetric">
+                    <div class="input-suffix">
+                        <input type="number" id="weightKg">
+                        <span class="suffix">kg</span>
+                    </div>
+                </div>
+                <div class="input-row hidden" id="weightImperial">
+                    <div class="input-suffix">
+                        <input type="number" id="weightLb">
+                        <span class="suffix">lb</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>
+                <span class="label-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"></path>
+                    </svg>
+                </span>
+                Activity
+            </label>
+            <select id="activity">
+                <option value="1.2">Sedentary</option>
+                <option value="1.375">Light exercise</option>
+                <option value="1.55">Moderate exercise</option>
+                <option value="1.725">Hard exercise</option>
+                <option value="1.9">Very active</option>
+            </select>
+        </div>
+
+        <button class="calculate-btn" onclick="calculate()">Calculate</button>
+    </div>
+
+    <div class="dashboard">
+
+        <div class="block">
+            <div class="ribbon-header">
+                <div class="ribbon-title">BMI Metric Ribbon</div>
+                <div class="ribbon-value metric-number" id="bmiValue">0.0</div>
+            </div>
+            <div class="bmi-ribbon" id="bmiRibbon">
+                <div class="bmi-segment under" data-category="Underweight">Underweight</div>
+                <div class="bmi-segment normal" data-category="Normal">Normal</div>
+                <div class="bmi-segment over" data-category="Overweight">Overweight</div>
+                <div class="bmi-segment obese" data-category="Obese">Obese</div>
+                <div class="bmi-scale" aria-hidden="true">
+                    <div class="bmi-tick" style="left: 25%;">18.5</div>
+                    <div class="bmi-tick" style="left: 50%;">25</div>
+                    <div class="bmi-tick" style="left: 75%;">30</div>
+                </div>
+                <div class="bmi-marker" id="bmiMarker"></div>
+            </div>
+
+            <table class="bmi-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>BMI Range</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-category="Underweight">
+                        <td>Underweight</td>
+                        <td>&lt; 18.5</td>
+                        <td>Low</td>
+                    </tr>
+                    <tr data-category="Normal">
+                        <td>Normal</td>
+                        <td>18.5 - 24.9</td>
+                        <td>Healthy</td>
+                    </tr>
+                    <tr data-category="Overweight">
+                        <td>Overweight</td>
+                        <td>25.0 - 29.9</td>
+                        <td>Increased Risk</td>
+                    </tr>
+                    <tr data-category="Obese">
+                        <td>Obese</td>
+                        <td>&gt; 30.0</td>
+                        <td>High Risk</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="block">
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-title">Daily Calories</div>
+                    <div class="stat-value metric-number" id="caloriesValue">0</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-title">BMR</div>
+                    <div class="tooltip" data-tip="Basal Metabolic Rate is the calories your body needs at rest.">ⓘ</div>
+                    <div class="stat-value metric-number" id="bmrValue">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            <div class="ribbon-title">Daily Calories by Activity</div>
+            <div class="activity-chart" id="activityChart">
+                <div class="chart-row" data-activity="1.2">
+                    <div>Sedentary</div>
+                    <div class="chart-bar"><span></span></div>
+                    <div class="chart-value metric-number">0</div>
+                </div>
+                <div class="chart-row" data-activity="1.375">
+                    <div>Light</div>
+                    <div class="chart-bar"><span></span></div>
+                    <div class="chart-value metric-number">0</div>
+                </div>
+                <div class="chart-row" data-activity="1.55">
+                    <div>Moderate</div>
+                    <div class="chart-bar"><span></span></div>
+                    <div class="chart-value metric-number">0</div>
+                </div>
+                <div class="chart-row" data-activity="1.725">
+                    <div>Hard</div>
+                    <div class="chart-bar"><span></span></div>
+                    <div class="chart-value metric-number">0</div>
+                </div>
+                <div class="chart-row" data-activity="1.9">
+                    <div>Very Active</div>
+                    <div class="chart-bar"><span></span></div>
+                    <div class="chart-value metric-number">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="block insights" id="insights">
+            Enter your details to see personalized health insights.
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
